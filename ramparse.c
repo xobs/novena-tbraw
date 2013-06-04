@@ -45,7 +45,6 @@ static int convert_ramfile(struct state *st) {
     struct fpga_ram_record rec;
     int packet_count = 0;
     int invalid_xmas = 0;
-    int invalid_zero = 0;
     int invalid_ale_cle = 0;
     int invalid_empty = 0;
     int invalid_full = 0;
@@ -54,23 +53,23 @@ static int convert_ramfile(struct state *st) {
     pkt_send_reset(st);
     pkt_send_buffer_drain(st, 1);
     while (read(st->in_fd, &rec, sizeof(rec)) == sizeof(rec)) {
-	// Both ALE and CLE set, with WE and RE 0
+        // Both ALE and CLE set, with WE and RE 0
         if ((rec.ctrl&0x0f) == 0x3) {
             invalid_xmas++;
             continue;
         }
-	// Both ALE and CLE set
+        // Both ALE and CLE set
         if ((rec.ctrl&0x03) == 0x3) {
             invalid_ale_cle++;
             continue;
         }
-	// Neither WE nor RE are set
-	if ((rec.ctrl&0x0c) == 0xc) {
+        // Neither WE nor RE are set
+        if ((rec.ctrl&0x0c) == 0xc) {
             invalid_empty++;
             continue;
         }
-	// Both WE and RE are set
-	if ((rec.ctrl&0x0c) == 0x0) {
+        // Both WE and RE are set
+        if ((rec.ctrl&0x0c) == 0x0) {
             invalid_full++;
             continue;
         }
@@ -83,11 +82,9 @@ static int convert_ramfile(struct state *st) {
     pkt_send_buffer_drain(st, 2);
     printf("Converted %d packets\n", packet_count);
     printf("Ignored %d packets with ALE/CLE/!RE/!WE\n", invalid_xmas);
-    printf("Ignored %d packets with no ALE or CLE\n", invalid_zero);
     printf("Ignored %d packets with both ALE and CLE\n", invalid_ale_cle);
     printf("Ignored %d packets with both RE and WE\n", invalid_full);
     printf("Ignored %d packets with no RE or WE\n", invalid_empty);
-    printf("RAM record size: %lu\n", sizeof(rec));
     return 0;
 }
 
